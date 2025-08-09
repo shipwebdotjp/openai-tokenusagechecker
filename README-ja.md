@@ -25,6 +25,7 @@ npx openai-tokenusagechecker --project YOUR_PROJECT_ID
 
 基本的な実行例:
 ```
+export OPENAI_ADMIN_KEY="YOUR_OPENAI_ADMIN_KEY"
 openai-tokenusagechecker --project your_project_id
 ```
 
