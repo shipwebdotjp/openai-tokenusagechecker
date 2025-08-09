@@ -1,0 +1,20 @@
+project: "YOUR_PROJECT_ID"
+admin_key: "YOUR_ADMIN_KEY"
+tier: 1
+thresholds:
+  warn: 80
+  alert: 95
+notify:
+  email:
+    to:
+      - "YOUR_EMAIL_ADDRESS"
+    smtp:
+      host: "YOUR_SMTP_HOST"
+      port: 587
+      secure: true
+      auth:
+        user: "YOUR_SMTP_USER"
+        pass: "YOUR_SMTP_PASSWORD"
+runtime:
+  timezone: "UTC"
+  ignore_unknown_models: true
