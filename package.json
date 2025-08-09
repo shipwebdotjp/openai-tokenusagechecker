@@ -1,14 +1,15 @@
 {
   "name": "openai-tokenusagechecker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Checking OpenAI API token usage for free daily usage on traffic shared program.",
   "type": "module",
   "bin": {
-    "openai-tokenusagechecker": "./src/index.js"
+    "openai-tokenusagechecker": "./bin/cli.js"
   },
   "scripts": {
     "start": "node ./src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest",
+    "build": "echo \"no build\""
   },
   "dependencies": {
     "cli-table3": "^0.6.5",
@@ -17,10 +18,32 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.4"
   },
+  "devDependencies": {
+    "vitest": "^1.2.4"
+  },
   "author": "shipweb",
   "license": "MIT",
   "files": [
     "src",
-    "config.sample.yml"
-  ]
+    "config.sample.yml",
+    "bin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shipwebdotjp/openai-tokenusagechecker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shipwebdotjp/openai-tokenusagechecker/issues"
+  },
+  "homepage": "https://github.com/shipwebdotjp/openai-tokenusagechecker#readme",
+  "keywords": [
+    "openai",
+    "token",
+    "usage",
+    "cli",
+    "monitor"
+  ],
+  "engines": {
+    "node": ">=16"
+  }
 }

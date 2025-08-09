@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { argv, exit } from 'process';
 import { GROUP_1M, GROUP_10M, getCapsByTier } from './config.js';
 import { fetchUsageByModelUTC } from './usageClient.js';
 import { aggregateByGroup } from './aggregate.js';
@@ -11,11 +10,12 @@ import Table from 'cli-table3';
 
 function parseArgs() {
   const args = {};
-  for (let i = 2; i < argv.length; i++) {
-    const a = argv[i];
+  const argvLocal = process.argv;
+  for (let i = 2; i < argvLocal.length; i++) {
+    const a = argvLocal[i];
     if (a.startsWith('--')) {
       const key = a.slice(2);
-      const val = argv[i+1] && !argv[i+1].startsWith('--') ? argv[++i] : true;
+      const val = argvLocal[i+1] && !argvLocal[i+1].startsWith('--') ? argvLocal[++i] : true;
       args[key] = val;
     }
   }
@@ -23,6 +23,7 @@ function parseArgs() {
 }
 
 function fmt(n) { return n.toLocaleString('en-US'); }
+function fmtKMG(n) { return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n); }
 
 function printTable(rows) {
     const table = new Table({
@@ -33,10 +34,10 @@ function printTable(rows) {
     for (const r of rows) {
       table.push([
         r.group,
-        fmt(r.input),
-        fmt(r.output),
-        fmt(r.total),
-        fmt(r.cap),
+        fmtKMG(r.input ?? 0),
+        fmtKMG(r.output ?? 0),
+        fmtKMG(r.total ?? 0),
+        fmtKMG(r.cap ?? 0),
         r.usagePct,
         r.status
       ]);
@@ -44,6 +45,11 @@ function printTable(rows) {
   
     console.log(table.toString());
   }
+
+function printOneLine(rows) {
+  const status = rows.map(r=>{ return r.group + ':' + fmtKMG(r.total) + '(' + r.usagePct + ')' + '[' + r.status + ']'; }).join(',');
+  console.log(status);
+}
 
 async function main() {
   const args = parseArgs();
@@ -56,9 +62,10 @@ async function main() {
   const alert = Number(merged.alert ?? merged.thresholds?.alert ?? 95);
   const email = merged.email || (merged.notify?.email?.to ? merged.notify.email.to.join(',') : undefined) || args.email;
   const apiKey = process.env.OPENAI_ADMIN_KEY || merged.admin_key || args['admin-key'];
+  const displayLevel = merged.display || 'normal';
 
-  if (!project) { console.error('Missing --project <project_id>'); exit(1); }
-  if (!apiKey) { console.error('Missing admin_key'); exit(1); }
+  if (!project) { console.error('Missing --project <project_id>'); process.exit(1); }
+  if (!apiKey) { console.error('Missing admin_key'); process.exit(1); }
 
   const now = new Date();
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0) / 1000;
@@ -70,7 +77,11 @@ async function main() {
     const byModel = await fetchUsageByModelUTC({ project, startTimeSec: start, endTimeSec: end, apiKey });
     const groups = aggregateByGroup(byModel);
     const { rows, exitCode } = evaluateStatus(groups, caps, { warn, alert });
-    printTable(rows);
+    if (displayLevel === 'normal' || displayLevel === 'verbose') {
+      printTable(rows);
+    } else if (displayLevel === 'quiet') {
+      printOneLine(rows);
+    }
 
     if (exitCode > 0 && email) {
       const to = email.split(',');
@@ -85,13 +96,13 @@ async function main() {
       await sendEmail({ smtp, to, subject, text });
     }
 
-    exit(exitCode);
+    process.exit(exitCode);
   } catch (err) {
     console.error('Error:', err.message ?? err);
-    exit(2);
+    process.exit(2);
   }
 }
 
+export { parseArgs, fmt, printTable, printOneLine, main };
+
 if (import.meta.url === `file://${process.argv[1]}`) main();
-
-
