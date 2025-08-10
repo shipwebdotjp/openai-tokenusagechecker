@@ -1,7 +1,8 @@
 # openai-tokenusagechecker
 
 OpenAI API のトークン使用量をチェックする CLI ツールです。プロジェクト単位で当日の使用量を集計し、しきい値を超えた場合に通知できます。  
-データ共有プログラムに参加すると、Tierに応じて毎日1M(250K)/10M(2.5M)トークンまで使用できますが、そレを超えていないかをすぐに確認できます。
+データ共有プログラムに参加すると、Tierに応じて毎日1M(250K)/10M(2.5M)トークンまで使用できますが、そのトークン数を超えていないかをすぐに確認できます。  
+OpenAIのデータ共有プログラムに関して詳しくは[こちら](https://help.openai.com/en/articles/10306912-sharing-feedback-evaluation-and-fine-tuning-data-and-api-inputs-and-outputs-with-openai)をご覧ください。
 
 ## インストール
 
@@ -37,9 +38,41 @@ openai-tokenusagechecker --project your_project_id
 - `--tier <1|2|...>`: あなたのtier 
 - `--warn <percent>`: 警告閾値（デフォルト 80）
 - `--alert <percent>`: アラート閾値（デフォルト 95）
-- `--display <normal|verbose|quiet>`: 表示レベル。quietの場合は1行で表示します。normalの場合は表形式で表示します。
+- `--output-format <oneline|table|debug>`: 出力形式 `oneline` 1行でのサマリー表示, `table` 表形式 (デフォルト), `debug` 表に加えてデバッグ情報を出力します。 省略形: `-o`.
 
-設定ファイルのサンプルは `config.sample.yml` を参照してください。
+## 設定ファイルのサンプル
+`config.yml`
+```
+project: "YOUR_PROJECT_ID"
+admin_key: "YOUR_ADMIN_KEY"
+tier: 1
+thresholds:
+  warn: 80
+  alert: 95
+notify:
+  email:
+    to:
+      - "YOUR_EMAIL_ADDRESS"
+    smtp:
+      host: "YOUR_SMTP_HOST"
+      port: 587
+      secure: true
+      auth:
+        user: "YOUR_SMTP_USER"
+        pass: "YOUR_SMTP_PASSWORD"
+runtime:
+  timezone: "UTC"
+  ignore_unknown_models: true
+output:
+  format: "table" # oneline, table, debug
+```
+
+設定ファイルを使用する場合は`--config <path>`オプションを使用してください。
+例
+```
+openai-tokenusagechecker --config /path/to/config.yml
+```
+
 
 ## 通知
 

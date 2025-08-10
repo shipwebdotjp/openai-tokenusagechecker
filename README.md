@@ -2,6 +2,7 @@
 
 A CLI tool to check OpenAI API token usage. It aggregates daily usage by project and can notify when thresholds are exceeded.  
 When participating in the data sharing program, you can use up to 1M (250K) / 10M (2.5M) tokens daily depending on your Tier, and this tool allows you to quickly check if you haven't exceeded those limits.
+For more detailed information about OpenAI’s data sharing program, please visit [this page](https://help.openai.com/en/articles/10306912-sharing-feedback-evaluation-and-fine-tuning-data-and-api-inputs-and-outputs-with-openai).
 
 ## Installation
 
@@ -37,21 +38,50 @@ Main options:
 - `--tier <1|2|...>`: Your tier
 - `--warn <percent>`: Warning threshold (default 80)
 - `--alert <percent>`: Alert threshold (default 95)
-- `--display <normal|verbose|quiet>`: Display level. In quiet mode, displays in a single line. In normal mode, displays in table format.
+- `--output-format <oneline|table|debug>`: Output format. `oneline` prints a compact single-line summary, `table` prints a human-friendly table (default), and `debug` prints the table plus additional JSON debug output to stderr. Short form: `-o`.
 
-See `config.sample.yml` for configuration file examples.
+## Configuration file sample
+`config.yml`
+```
+project: "YOUR_PROJECT_ID"
+admin_key: "YOUR_ADMIN_KEY"
+tier: 1
+thresholds:
+  warn: 80
+  alert: 95
+notify:
+  email:
+    to:
+      - "YOUR_EMAIL_ADDRESS"
+    smtp:
+      host: "YOUR_SMTP_HOST"
+      port: 587
+      secure: true
+      auth:
+        user: "YOUR_SMTP_USER"
+        pass: "YOUR_SMTP_PASSWORD"
+runtime:
+  timezone: "UTC"
+  ignore_unknown_models: true
+output:
+  format: "table" # oneline, table, debug
+```
+Example for using config file.
+```
+openai-tokenusagechecker --config /path/to/config.yml
+```
 
 ## Notifications
 
 Email notifications can be sent when thresholds are exceeded. SMTP settings use `notify.email.smtp` in the configuration file.
 
 # Display Examples
-## quiet
+## oneline
 ```
-group-1M:85.1K(34.0%)[OK],group-10M:674.5K(27.0%)[OK]
+group-1M: 85.1K(34.0%)[OK],group-10M: 674.5K(27.0%)[OK]
 ```
 
-## normal
+## table
 ```
 ┌───────────┬────────┬────────┬────────┬──────┬────────┬────────┐
 │ Group     │  Input │ Output │  Total │  Cap │ Usage% │ Status │
@@ -60,6 +90,12 @@ group-1M:85.1K(34.0%)[OK],group-10M:674.5K(27.0%)[OK]
 ├───────────┼────────┼────────┼────────┼──────┼────────┼────────┤
 │ group-10M │ 647.3K │  27.2K │ 674.5K │ 2.5M │  27.0% │ OK     │
 └───────────┴────────┴────────┴────────┴──────┴────────┴────────┘
+```
+
+## debug
+When run with `--output-format debug` the tool prints the same table output and also emits a JSON dump of `rows` to stderr for troubleshooting:
+```
+DEBUG rows: [{ "group": "group-1M", "total": 85100, "usagePct": "34.0%", "status": "OK", ... }, ...]
 ```
 
 ## Development

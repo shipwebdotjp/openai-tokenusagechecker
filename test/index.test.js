@@ -43,6 +43,15 @@ describe('index utilities', () => {
     process.argv = originalArgv;
   });
 
+  it('parseArgs supports short flags like -o and single-dash flags', () => {
+    const originalArgv = process.argv;
+    process.argv = ['node', 'script', '-o', 'oneline', '-q'];
+    const res = parseArgs();
+    expect(res.o).toBe('oneline'); // short flag value
+    expect(res.q).toBe(true); // single-dash boolean flag
+    process.argv = originalArgv;
+  });
+
   it('fmt formats numbers with commas', () => {
     expect(fmt(1234567)).toBe('1,234,567');
   });
@@ -122,6 +131,63 @@ describe('main flow', () => {
 
     exitSpy.mockRestore();
     errSpy.mockRestore();
+  });
+
+  it('invalid --output-format triggers exit 1', async () => {
+    mergeConfig.mockReturnValue({ project: 'p', admin_key: 'key' });
+    process.argv = ['node', 'script', '--output-format', 'badval'];
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => { throw new Error('EXIT:' + code); });
+    try {
+      await main();
+      throw new Error('main did not exit as expected');
+    } catch (err) {
+      expect(String(err)).toContain('EXIT:1');
+    } finally {
+      exitSpy.mockRestore();
+    }
+  });
+
+  it('legacy --quiet maps to oneline output', async () => {
+    mergeConfig.mockReturnValue({ project: 'p', tier: 1, admin_key: 'key' });
+    fetchUsageByModelUTC.mockResolvedValue(new Map());
+    aggregateByGroup.mockReturnValue({ 'group-1M': { input: 1, output: 1, total: 2 } });
+    evaluateStatus.mockReturnValue({ rows: [{ group: 'group-1M', total: 2, cap: 250000, usagePct: '0.0%', status: 'OK' }], exitCode: 0 });
+    process.argv = ['node', 'script', '--quiet'];
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await main();
+    expect(logSpy).toHaveBeenCalled();
+    exitSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it('debug mode prints JSON to stderr', async () => {
+    mergeConfig.mockReturnValue({ project: 'p', tier: 1, admin_key: 'key' });
+    fetchUsageByModelUTC.mockResolvedValue(new Map());
+    aggregateByGroup.mockReturnValue({ 'group-1M': { input: 1, output: 1, total: 2 } });
+    evaluateStatus.mockReturnValue({ rows: [{ group: 'group-1M', total: 2, cap: 250000, usagePct: '0.0%', status: 'OK' }], exitCode: 0 });
+    process.argv = ['node', 'script', '--output-format', 'debug', '--project', 'p'];
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+    await main();
+    // debug mode should call console.error at least once for the JSON dump
+    expect(errSpy).toHaveBeenCalled();
+    errSpy.mockRestore();
+    exitSpy.mockRestore();
+  });
+
+  it('uses config.output.format when no CLI arg provided', async () => {
+    mergeConfig.mockReturnValue({ project: 'p', admin_key: 'key', output: { format: 'oneline' } });
+    fetchUsageByModelUTC.mockResolvedValue(new Map());
+    aggregateByGroup.mockReturnValue({ 'group-1M': { input: 1, output: 1, total: 2 } });
+    evaluateStatus.mockReturnValue({ rows: [{ group: 'group-1M', total: 2, cap: 250000, usagePct: '0.0%', status: 'OK' }], exitCode: 0 });
+    process.argv = ['node', 'script'];
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+    await main();
+    expect(logSpy).toHaveBeenCalled(); // oneline triggers a console.log
+    logSpy.mockRestore();
+    exitSpy.mockRestore();
   });
 
   it('missing project triggers exit 1', async () => {

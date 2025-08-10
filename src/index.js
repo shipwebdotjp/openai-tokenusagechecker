@@ -15,7 +15,13 @@ function parseArgs() {
     const a = argvLocal[i];
     if (a.startsWith('--')) {
       const key = a.slice(2);
-      const val = argvLocal[i+1] && !argvLocal[i+1].startsWith('--') ? argvLocal[++i] : true;
+      // treat next token as value only if it doesn't start with '-' (single or double dash)
+      const val = argvLocal[i+1] && !argvLocal[i+1].startsWith('-') ? argvLocal[++i] : true;
+      args[key] = val;
+    } else if (a.startsWith('-')) {
+      // support short flags like -o table or -q
+      const key = a.slice(1);
+      const val = argvLocal[i+1] && !argvLocal[i+1].startsWith('-') ? argvLocal[++i] : true;
       args[key] = val;
     }
   }
@@ -47,7 +53,7 @@ function printTable(rows) {
   }
 
 function printOneLine(rows) {
-  const status = rows.map(r=>{ return r.group + ':' + fmtKMG(r.total) + '(' + r.usagePct + ')' + '[' + r.status + ']'; }).join(',');
+  const status = rows.map(r=>{ return r.group + ': ' + fmtKMG(r.total) + '(' + r.usagePct + ')' + '[' + r.status + ']'; }).join(',');
   console.log(status);
 }
 
@@ -62,7 +68,24 @@ async function main() {
   const alert = Number(merged.alert ?? merged.thresholds?.alert ?? 95);
   const email = merged.email || (merged.notify?.email?.to ? merged.notify.email.to.join(',') : undefined) || args.email;
   const apiKey = process.env.OPENAI_ADMIN_KEY || merged.admin_key || args['admin-key'];
-  const displayLevel = merged.display || 'normal';
+  // Determine output format. Priority:
+  // 1) CLI --output-format or -o
+  // 2) config.yml output.format
+  // 3) legacy config.display.level
+  // 4) legacy CLI flags --quiet/--normal/--verbose
+  const rawFormat =
+    args['output-format'] ||
+    args.o ||
+    merged.output?.format ||
+    merged.display?.level ||
+    (args.quiet ? 'oneline' : args.verbose ? 'debug' : args.normal ? 'table' : undefined);
+  const outputFormat = (rawFormat || 'table').toString();
+
+  const allowedFormats = new Set(['oneline', 'table', 'debug']);
+  if (!allowedFormats.has(outputFormat)) {
+    console.error('Invalid output format:', outputFormat, 'Allowed: oneline, table, debug');
+    process.exit(1);
+  }
 
   if (!project) { console.error('Missing --project <project_id>'); process.exit(1); }
   if (!apiKey) { console.error('Missing admin_key'); process.exit(1); }
@@ -77,10 +100,15 @@ async function main() {
     const byModel = await fetchUsageByModelUTC({ project, startTimeSec: start, endTimeSec: end, apiKey });
     const groups = aggregateByGroup(byModel);
     const { rows, exitCode } = evaluateStatus(groups, caps, { warn, alert });
-    if (displayLevel === 'normal' || displayLevel === 'verbose') {
+    if (outputFormat === 'table' || outputFormat === 'debug') {
       printTable(rows);
-    } else if (displayLevel === 'quiet') {
+    } else if (outputFormat === 'oneline') {
       printOneLine(rows);
+    }
+
+    if (outputFormat === 'debug') {
+      // emit verbose debug info to stderr
+      console.error('DEBUG rows:', JSON.stringify(rows, null, 2));
     }
 
     if (exitCode > 0 && email) {

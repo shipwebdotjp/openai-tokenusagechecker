@@ -18,5 +18,5 @@ notify:
 runtime:
   timezone: "UTC"
   ignore_unknown_models: true
-display:
-  level: "quiet" # quiet, normal, verbose
+output:
+  format: "table" # oneline, table, debug
