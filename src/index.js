@@ -87,7 +87,6 @@ async function main() {
     process.exit(1);
   }
 
-  if (!project) { console.error('Missing --project <project_id>'); process.exit(1); }
   if (!apiKey) { console.error('Missing admin_key'); process.exit(1); }
 
   const now = new Date();
