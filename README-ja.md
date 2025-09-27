@@ -14,6 +14,8 @@ npm install -g openai-tokenusagechecker
 ローカルインストール（パッケージをローカルで使う場合）:
 ```
 npm install openai-tokenusagechecker
+npx openai-tokenusagechecker
+# または
 npx openai-tokenusagechecker --project YOUR_PROJECT_ID
 ```
 
@@ -27,11 +29,13 @@ npx openai-tokenusagechecker --project YOUR_PROJECT_ID
 基本的な実行例:
 ```
 export OPENAI_ADMIN_KEY="YOUR_OPENAI_ADMIN_KEY"
+openai-tokenusagechecker
+# または
 openai-tokenusagechecker --project your_project_id
 ```
 
 主なオプション:
-- `--project <project_id>`: 監視対象のプロジェクトID
+- `--project <project_id>`: 監視対象のプロジェクトID。省略可能です。省略した場合は organization 全体の使用量を取得します。
 - `--config <path>`: 設定ファイルのパス（デフォルト: `./config.yml`）
 - `--admin-key <key>`: 管理キーを直接指定（環境変数 `OPENAI_ADMIN_KEY` の代替）
 - `--email <addr>`: 通知先メールアドレス（設定ファイルの notify.email.to を上書き）
