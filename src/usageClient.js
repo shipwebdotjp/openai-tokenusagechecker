@@ -5,8 +5,8 @@ export async function fetchUsageByModelUTC({ project, startTimeSec, endTimeSec, 
     start_time: String(startTimeSec),
     end_time: String(endTimeSec),
     group_by: 'model',
-    project_ids: project,
   });
+  if (project) params.set('project_ids', project);
   if (models && models.length) {
     for (const m of models) params.append('models', m);
   }
