@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node ./src/index.js",
-    "test": "vitest",
+    "test": "vitest run",
     "build": "echo \"no build\""
   },
   "dependencies": {
