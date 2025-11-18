@@ -2,6 +2,8 @@ export const GROUP_1M = 'group-1M';
 export const GROUP_10M = 'group-10M';
 
 export const MODEL_GROUP_MAP = new Map([
+  ['gpt-5.1-2025-11-13', GROUP_1M],
+  ['gpt-5.1-codex', GROUP_1M],
   ['gpt-5-codex', GROUP_1M],
   ['gpt-5-2025-08-07', GROUP_1M],
   ['gpt-5-chat-latest', GROUP_1M],
@@ -14,6 +16,7 @@ export const MODEL_GROUP_MAP = new Map([
   ['o1-preview-2024-09-12', GROUP_1M],
   ['o1-2024-12-17', GROUP_1M],
 
+  ['gpt-5.1-codex-mini', GROUP_10M],
   ['gpt-5-mini-2025-08-07', GROUP_10M],
   ['gpt-5-nano-2025-08-07', GROUP_10M],
   ['gpt-4.1-mini-2025-04-14', GROUP_10M],

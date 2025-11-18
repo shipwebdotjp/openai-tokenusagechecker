@@ -190,20 +190,23 @@ describe('main flow', () => {
     exitSpy.mockRestore();
   });
 
-  it('missing project triggers exit 1', async () => {
-    // merged config does not include project
-    mergeConfig.mockReturnValue({});
-    // Make process.exit throw so we can assert the code without letting main continue
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => { throw new Error('EXIT:' + code); });
-    try {
-      await main();
-      // If main does not throw, fail the test
-      throw new Error('main did not exit as expected');
-    } catch (err) {
-      expect(String(err)).toContain('EXIT:1');
-    } finally {
-      exitSpy.mockRestore();
-    }
+  it('runs without project and fetches org totals', async () => {
+    mergeConfig.mockReturnValue({ tier: 1, admin_key: 'key' });
+    fetchUsageByModelUTC.mockResolvedValue(new Map());
+    aggregateByGroup.mockReturnValue({ 'group-1M': { input: 1, output: 2, total: 3 } });
+    evaluateStatus.mockReturnValue({ rows: [{ group: 'group-1M', total: 3, cap: 250000, usagePct: '0.0%', status: 'OK' }], exitCode: 0 });
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await main();
+
+    const fetchArgs = fetchUsageByModelUTC.mock.calls[0][0];
+    expect(fetchArgs.project).toBeUndefined();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+
+    exitSpy.mockRestore();
+    logSpy.mockRestore();
   });
 
   it('missing apiKey triggers exit 1', async () => {
