@@ -2,3 +2,4 @@ node_modules/
 doc/
 .env
 config.yml
+HOW_TO_PUBLISH.md
