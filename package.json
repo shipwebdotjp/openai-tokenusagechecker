@@ -1,6 +1,6 @@
 {
   "name": "openai-tokenusagechecker",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Checking OpenAI API token usage for free daily usage on traffic shared program.",
   "type": "module",
   "bin": {
