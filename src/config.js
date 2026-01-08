@@ -2,6 +2,7 @@ export const GROUP_1M = 'group-1M';
 export const GROUP_10M = 'group-10M';
 
 export const MODEL_GROUP_MAP = new Map([
+  ['gpt-5.2-2025-12-11', GROUP_1M],
   ['gpt-5.1-2025-11-13', GROUP_1M],
   ['gpt-5.1-codex', GROUP_1M],
   ['gpt-5-codex', GROUP_1M],
