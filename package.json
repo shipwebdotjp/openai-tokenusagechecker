@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node ./src/index.js",
     "test": "vitest run",
-    "build": "echo \"no build\""
+    "build": "echo \"no build\"",
+    "release": "node ./scripts/release.js"
   },
   "dependencies": {
     "cli-table3": "^0.6.5",
