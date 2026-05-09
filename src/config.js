@@ -11,6 +11,7 @@ export const MODEL_GROUP_MAP = new Map([
   ['gpt-5.2-codex', GROUP_1M],
   ['gpt-5.1-codex', GROUP_1M],
   ['gpt-5-codex', GROUP_1M],
+  ['chat-latest', GROUP_1M],
   ['gpt-5.3-chat-latest', GROUP_1M],
   ['gpt-5.2-chat-latest', GROUP_1M],
   ['gpt-5.1-chat-latest', GROUP_1M],
